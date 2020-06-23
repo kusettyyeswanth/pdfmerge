@@ -61,89 +61,43 @@ app.post('/mergepdf',(req,res)=>{
             console.log('promises resolved');
             console.log('file writing completed...'); 
             //reading files    
-            const arrayOfFiles = fs.readdirSync("Resources");
-            console.log(arrayOfFiles);
-            var finalArr =arrayOfFiles.map((x)=>{
-                if(!(x.startsWith('.'))){
-                    return 'Resources/'+x; 
-                }
-            });
-            finalArr = finalArr.filter(function( element ) {
-                return element !== undefined;
-            });
-            console.log(finalArr);
-            //reading fields end
-            merge(finalArr, 'Output/final.pdf', function(err) {
-                if(err) {
-                console.log(err);
-                res.send(err);
-                }
-                else{
-                    console.log('Successfully merged!');
-                    var data =fs.readFileSync('Output/final.pdf');
-                    res.contentType("application/pdf");
-                    res.send(data);
-                    //res.send('Hello World!');
-                    // res.downloadPDF()
-                    // .sendStatus('200')
-                    // .json({ 'Success':'true' });
-                }
-            });
-
+            // const arrayOfFiles = fs.readdirSync("Resources");
+            // console.log(arrayOfFiles);
+            // var finalArr =arrayOfFiles.map((x)=>{
+            //     if(!(x.startsWith('.'))){
+            //         return 'Resources/'+x; 
+            //     }
+            // });
+            // finalArr = finalArr.filter(function( element ) {
+            //     return element !== undefined;
+            // });
+            // console.log(finalArr);
+            var finalMergeArr=[];
+            var allIds =req.body.Ids.split(',');
+            for(var i=0;i < allIds.length;i++){
+                var fName = 'Resources/'+allIds[i]+'.pdf';
+                finalMergeArr.push(fName);
+            }
+            console.log(finalMergeArr);
+            merge(finalMergeArr, 'Output/final.pdf', function(err) {
+                    if(err) {
+                    console.log(err);
+                    res.send(err);
+                    }
+                    else{
+                        console.log('Successfully merged!');
+                        var data =fs.readFileSync('Output/final.pdf');
+                        res.contentType("application/pdf");
+                        res.send(data);
+                    }
+                });
         })
         .catch(console.log);
-
-        //reading files    
-        /*const arrayOfFiles = fs.readdirSync("Resources");
-        console.log(arrayOfFiles);
-        var finalArr =arrayOfFiles.map((x)=>{
-            if(!(x.startsWith('.'))){
-                return 'Resources/'+x; 
-            }
-        });
-        finalArr = finalArr.filter(function( element ) {
-            return element !== undefined;
-         });
-        console.log(finalArr);*/
-        //reading fields end
-
-        /*setTimeout(function () {
-            console.log('merging');
-            merge(finalArr, 'Output/final.pdf', function(err) {
-                if(err) {
-                console.log(err);
-                res.send(err);
-                }
-                else{
-                    console.log('Successfully merged!');
-                    var data =fs.readFileSync('Output/final.pdf');
-                    res.contentType("application/pdf;base64");
-                    res.send(data);
-                }
-            });
-          }, 1000);*/
 
      });
 
 });
-app.get('/mergetest', function (req, res) {
-    merge(['Resources/00P110000070wcaEAA.pdf', 'Resources/00P110000070xISEAY.pdf'], 'Output/pdf3.pdf', function(err) {
-        if(err) {
-        console.log(err);
-        res.send(err);
-        }
-        else{
-            console.log('Successfully merged!');
-            var data =fs.readFileSync('Output/pdf3.pdf');
-            res.contentType("application/pdf");
-            res.send(data);
-            //res.send('Hello World!');
-            // res.downloadPDF()
-            // .sendStatus('200')
-            // .json({ 'Success':'true' });
-        }
-    });
-})
+
 app.get('/merge', function (req, res) {
 
     let connectionFn =sfdcConnFn();
@@ -195,6 +149,24 @@ async function downloadPDF(pdfURL, outputFilename)
         let pdfBuffer = await request.get({uri: pdfURL, encoding: null});
         console.log("Writing downloaded PDF file to " + outputFilename + "...");
         fs.writeFileSync(outputFilename, pdfBuffer);
+}
+function toMergePdf(finalArr){
+    return new Promise(function(resolve, reject) {
+        console.log('merging: ');
+        console.log(finalArr);
+        console.log('<---------->');
+        merge(finalArr, 'Output/final.pdf', function(err) {
+            if(err) {
+            console.log(err);
+            //res.send(err);
+            reject(err);
+            }
+            else{
+                console.log('Successfully merged!');
+                 resolve('success');
+            }
+        });
+    })
 }
 function sfdcConnFn(){
     return new Promise(function(resolve, reject) {
