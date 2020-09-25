@@ -1,7 +1,9 @@
 var express = require('express');
 const merge = require('easy-pdf-merge');
+var cors = require('cors');
 var download = require('download-pdf')
 const fs = require("fs");
+var compression = require('compression')
 const https = require('https');
 const request = require("request-promise-native");
 const path = require("path")
@@ -11,24 +13,21 @@ var bodyParser = require('body-parser');
 const directoryPath = 'Resources';
 var server_port = process.env.YOUR_PORT || process.env.PORT || 80;
 app.use(bodyParser.json());
-
-
+app.use(cors());
+app.use(compression());
 app.get('/', function (req, res) {
 res.send('API is working.. Please use /mergepdf endpoint..');
 });
 app.post('/mergepdf',(req,res)=>{
-
     //initially remove all files in the directory....
     fs.readdir(directoryPath, (err, files) => {
         if (err) throw err;
-      
         for (const file of files) {
           fs.unlink(path.join(directoryPath, file), err => {
             if (err) throw err;
           });
         }
       });
-
     //console.log('Ids: '+ req.Ids);
     let connectionFn =sfdcConnFn();
     connectionFn.then((data)=>{
@@ -93,13 +92,9 @@ app.post('/mergepdf',(req,res)=>{
                 });
         })
         .catch(console.log);
-
      });
-
 });
-
 app.get('/merge', function (req, res) {
-
     let connectionFn =sfdcConnFn();
     connectionFn.then((data)=>{
        // console.log(data.con);
@@ -109,7 +104,6 @@ app.get('/merge', function (req, res) {
         //get file
         fileOut = fs.createWriteStream('./test.pdf')
         data.con.sobject('Attachment').record('00P110000070xISEAY').blob('Body').pipe(fileOut);
-
     });
     //get connected to salesforce.
     //read the files from salesforce attachments.
@@ -143,7 +137,6 @@ Promise.all([promise1, promise2])
 res.send('error occured while trying to merger files..');
 });
 })
-
 async function downloadPDF(pdfURL, outputFilename) 
 {
         let pdfBuffer = await request.get({uri: pdfURL, encoding: null});
@@ -174,7 +167,7 @@ function sfdcConnFn(){
             // you can change loginUrl to connect to sandbox or prerelease env.
             loginUrl : (process.env.url|| 'https://test.salesforce.com')
             });
-            conn.login((process.env.username), (process.env.password), function(err, userInfo) {
+            conn.login((process.env.username||'dinesh@cloudbyz.com.test'), (process.env.password||'CbyzSpring@2018Piac3UklAklz75xGapSAqtmXm'), function(err, userInfo) {
             if (err) { 
                 var resp={
                     con :'error',
@@ -194,7 +187,6 @@ function sfdcConnFn(){
                 resolve(resp);
             }//sucess conn else
             });//conn login fn.
-    
     })
 }
 app.listen(process.env.PORT ||3000, function () {
