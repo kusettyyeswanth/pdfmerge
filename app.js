@@ -11,6 +11,7 @@ var app = express();
 var jsforce = require('jsforce');
 var bodyParser = require('body-parser');
 const directoryPath = 'Resources';
+const pdf2base64 = require('pdf-to-base64');
 var server_port = process.env.YOUR_PORT || process.env.PORT || 80;
 app.use(bodyParser.json());
 app.use(cors());
@@ -85,9 +86,22 @@ app.post('/mergepdf',(req,res)=>{
                     }
                     else{
                         console.log('Successfully merged!');
-                        var data =fs.readFileSync('Output/final.pdf');
-                        res.contentType("application/pdf");
-                        res.send(data);
+                        //var data =fs.readFileSync('Output/final.pdf');
+                        //res.contentType("application/pdf");
+                        //res.send(data);
+                        pdf2base64("Output/final.pdf")
+                        .then(
+                            (response) => {
+                                //console.log(response);
+                                res.send(response); //cGF0aC90by9maWxlLmpwZw==
+                            }
+                        )
+                        .catch(
+                            (error) => {
+                                console.log(error);
+                                res.send(error); //Exepection error....
+                            }
+                        )
                     }
                 });
         })
